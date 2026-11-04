@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hà Nhân Tiên </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        [x-cloak] { display: none !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-black"
+      x-data="windiStore()" x-init="initData()">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2.5 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-emerald-400 p-[1px] shadow-lg shadow-cyan-500/20">
+                    <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center font-black text-transparent bg-clip-text bg-gradient-to-tr from-cyan-400 to-emerald-400 text-lg">
+                        GH
+                    </div>
+                </div>
+                <div>
+                    <span class="font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">Gia Huy Shop</span>
+                    <span class="block text-[10px] font-mono text-slate-500 -mt-1">Tiện lợi và tối ưu</span>
+                </div>
+            </a>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3">
+                <!-- User Profile / Auth Button -->
+                <template x-if="isLoggedIn">
+                    <button @click="openMenu = true" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-all">
+                        <div class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs">
+                            <span x-text="user.name.charAt(0)"></span>
+                        </div>
+                        <span class="text-xs font-mono font-medium text-emerald-400" x-text="user.balance.toLocaleString('vi-VN') + 'đ'"></span>
+                    </button>
+                </template>
+                <template x-if="!isLoggedIn">
+                    <button @click="showAuthModal = true" class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </button>
+                </template>
+
+                <!-- Hamburger Menu Button -->
+                <button @click="openMenu = true" class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Marketplace Grid -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Subheader Search & Tags -->
+        <div class="mb-8 space-y-4">
+            <div class="flex flex-col sm:flex-row gap-3 items-stretch justify-between">
+                <div class="relative flex-1">
+                    <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" x-model="searchQuery" placeholder="Tìm kiếm công cụ AI, gói tài khoản..." class="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-all font-mono">
+                </div>
+            </div>
+
+            <!-- Category Filter Tags -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none font-mono text-xs">
+                <template x-for="cat in categories" :key="cat">
+                    <button @click="selectedCategory = cat" 
+                            :class="selectedCategory === cat ? 'bg-cyan-500 text-slate-950 font-semibold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'"
+                            class="px-3 py-1.5 rounded-lg whitespace-nowrap transition-all">
+                        <span x-text="cat"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <template x-for="product in filteredProducts" :key="product.id">
+                <div class="group bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 hover:border-cyan-500/40 transition-all duration-300 flex flex-col justify-between hover:shadow-xl hover:shadow-cyan-500/5">
+                    <div>
+                        <!-- Image Banner -->
+                        <div class="relative overflow-hidden rounded-xl bg-slate-950 aspect-[16/9] mb-4 border border-slate-800/50">
+                            <img :src="product.image" :alt="product.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
+                            <span class="absolute top-2.5 right-2.5 bg-slate-950/80 backdrop-blur-md border border-slate-700/50 text-cyan-400 text-[10px] font-mono font-medium px-2 py-0.5 rounded-md" x-text="product.category"></span>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="space-y-1.5">
+                            <div class="text-[11px] font-mono text-slate-500 uppercase tracking-wider" x-text="product.tagline"></div>
+                            <h3 class="font-bold text-white text-base group-hover:text-cyan-400 transition-colors font-mono" x-text="product.name"></h3>
+                            <p class="text-xs text-slate-400 line-clamp-2" x-text="product.description"></p>
+                        </div>
+                    </div>
+
+                    <!-- Price & Action -->
+                    <div class="pt-4 mt-4 border-t border-slate-800/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-500 line-through font-mono block text-[11px]" x-show="product.oldPrice" x-text="product.oldPrice?.toLocaleString('vi-VN') + 'đ'"></span>
+                            <span class="text-base font-extrabold text-emerald-400 font-mono" x-text="product.price ? product.price.toLocaleString('vi-VN') + 'đ' : 'Từ ' + product.minPrice.toLocaleString('vi-VN') + 'đ'"></span>
+                        </div>
+                        
+                        <button @click="openProductModal(product)" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-slate-950 transition-all font-mono text-xs font-semibold">
+                            <span>Còn hàng</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </main>
+
+    <!-- Drawer Navigation (3 Gạch) -->
+    <div x-cloak x-show="openMenu" class="fixed inset-0 z-50 overflow-hidden" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" @click="openMenu = false"></div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-slate-900 border-l border-slate-800 p-6 flex flex-col justify-between shadow-2xl">
+                <div class="space-y-6">
+                    <!-- Drawer Header -->
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <span class="font-mono text-xs text-cyan-400 font-semibold tracking-wider">// SYSTEM_MENU</span>
+                        <button @click="openMenu = false" class="text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    </div>
+
+                    <!-- User Account Summary -->
+                    <div class="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                        <div class="text-xs font-mono text-slate-500 mb-1">TÀI KHOẢN TỔNG QUAN</div>
+                        <div class="font-bold text-white text-base" x-text="user.name"></div>
+                        <div class="text-xs text-slate-400 font-mono mt-0.5" x-text="user.email"></div>
+                        <div class="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                            <span class="text-xs text-slate-400 font-mono">Số dư ví:</span>
+                            <span class="text-sm font-bold font-mono text-emerald-400" x-text="user.balance.toLocaleString('vi-VN') + 'đ'"></span>
+                        </div>
+                        <button @click="openMenu = false; showTopUpModal = true" class="w-full mt-3 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono text-xs font-semibold hover:bg-cyan-500 hover:text-slate-950 transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <span>Nạp tiền vào ví</span>
+                        </button>
+                    </div>
+
+                    <!-- Menu List -->
+                    <nav class="space-y-2 font-mono text-sm">
+                        <button @click="activeTab = 'account'; openMenu = false" class="w-full p-3 rounded-xl bg-slate-950/50 border border-slate-800/60 hover:border-cyan-500/40 text-left flex items-center gap-3 transition-all">
+                            <span class="text-cyan-400 font-bold">01</span>
+                            <span class="text-slate-200">Thông tin tài khoản</span>
+                        </button>
+                        <button @click="openMenu = false; showOrderHistory = true" class="w-full p-3 rounded-xl bg-slate-950/50 border border-slate-800/60 hover:border-cyan-500/40 text-left flex items-center gap-3 transition-all">
+                            <span class="text-cyan-400 font-bold">02</span>
+                            <span class="text-slate-200">Lịch sử mua hàng</span>
+                        </button>
+                        <a href="http://zaloapp.com/qr/p/12wrvnupkuo6l" target="_blank" class="w-full p-3 rounded-xl bg-slate-950/50 border border-slate-800/60 hover:border-cyan-500/40 text-left flex items-center justify-between transition-all group">
+                            <div class="flex items-center gap-3">
+                                <span class="text-cyan-400 font-bold">03</span>
+                                <span class="text-slate-200">Hỗ trợ Zalo CSKH</span>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="text-xs font-mono text-slate-600 text-center">
+                    WINDI_STUDIO v2.5.0
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi Tiết Sản Phẩm (Gemini Pro & các sản phẩm) -->
+    <div x-cloak x-show="showProductModal" class="fixed inset-0 z-50 overflow-y-auto" x-transition>
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showProductModal = false"></div>
+
+            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-6 my-8 text-left">
+                <!-- Close Button -->
+                <button @click="showProductModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+
+                <!-- Product Banner -->
+                <div class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 aspect-[16/9]">
+                    <img :src="selectedProduct?.image" class="w-full h-full object-cover">
+                </div>
+
+                <!-- Custom Options Cho Gemini Pro Nâng Chính Chủ (Gói ID 2) -->
+                <template x-if="selectedProduct?.id === 2">
+                    <div class="space-y-5">
+                        <!-- Benefits List Box -->
+                        <div class="bg-slate-950/90 border border-cyan-500/30 rounded-xl p-4 text-xs space-y-3 text-slate-300">
+                            <div class="flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Quyền truy cập <strong>Gemini 4 Argon</strong> trong Gemini, Deep Research và Antigravity.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Gemini tích hợp trong Gmail, Docs, Vids và các ứng dụng Google được hỗ trợ.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Thêm quyền sử dụng <strong>Google Flow</strong> và <strong>Gemini Notebook</strong>.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Thêm <strong>1 tháng YouTube Premium</strong>.</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 pt-2 border-t border-slate-800">
+                                Một số tính năng có thể phụ thuộc quốc gia, tài khoản và điều kiện của Google.
+                            </p>
+                        </div>
+
+                        <!-- Duration Selector Buttons -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Thời hạn gói</label>
+                            <div class="grid grid-cols-3 gap-2.5">
+                                <button @click="selectedPlan = { duration: '6 tháng', price: 239000 }"
+                                        :class="selectedPlan.duration === '6 tháng' ? 'border-cyan-500 bg-cyan-950/40 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'"
+                                        class="border rounded-xl p-3 text-center transition-all cursor-pointer">
+                                    <div class="font-bold text-sm font-mono">6 tháng</div>
+                                    <div class="text-[11px] text-slate-400 mt-1 font-mono">239.000đ</div>
+                                </button>
+                                
+                                <button @click="selectedPlan = { duration: '12 tháng', price: 399000 }"
+                                        :class="selectedPlan.duration === '12 tháng' ? 'border-cyan-500 bg-cyan-950/40 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'"
+                                        class="border rounded-xl p-3 text-center transition-all cursor-pointer">
+                                    <div class="font-bold text-sm font-mono">12 tháng</div>
+                                    <div class="text-[11px] text-slate-400 mt-1 font-mono">399.000đ</div>
+                                </button>
+
+                                <button @click="selectedPlan = { duration: '24 tháng', price: 699000 }"
+                                        :class="selectedPlan.duration === '24 tháng' ? 'border-cyan-500 bg-cyan-950/40 text-white' : 'border-slate-800 bg-slate-950 text-slate-400'"
+                                        class="border rounded-xl p-3 text-center transition-all cursor-pointer">
+                                    <div class="font-bold text-sm font-mono">24 tháng</div>
+                                    <div class="text-[11px] text-slate-400 mt-1 font-mono">699.000đ</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Price display -->
+                        <div class="text-3xl font-extrabold text-white tracking-tight flex items-baseline gap-2 font-mono">
+                            <span x-text="selectedPlan.price.toLocaleString('vi-VN') + 'đ'"></span>
+                            <span class="text-xs font-normal text-slate-400" x-text="'/ ' + selectedPlan.duration"></span>
+                        </div>
+
+                        <!-- Warranty -->
+                        <div class="space-y-1 bg-slate-950 p-3 rounded-xl border border-slate-800/60">
+                            <div class="text-xs font-bold text-white uppercase font-mono">Bảo hành</div>
+                            <div class="text-xs text-emerald-400 font-mono">Có bảo hành</div>
+                            <div class="text-xs text-slate-300 font-medium">Bảo Hành 2 Tháng cho mọi gói</div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Default display for other products -->
+                <template x-if="selectedProduct?.id !== 2">
+                    <div class="space-y-3">
+                        <h2 class="text-xl font-bold font-mono text-white" x-text="selectedProduct?.name"></h2>
+                        <div class="text-2xl font-extrabold font-mono text-emerald-400" x-text="selectedProduct?.price?.toLocaleString('vi-VN') + 'đ'"></div>
+                        <p class="text-xs text-slate-300" x-text="selectedProduct?.description"></p>
+                    </div>
+                </template>
+
+                <!-- Checkbox terms -->
+                <div class="flex items-start gap-2.5 pt-2">
+                    <input type="checkbox" id="terms" x-model="agreedTerms" class="mt-1 rounded bg-slate-950 border-slate-800 text-cyan-500 focus:ring-0">
+                    <label for="terms" class="text-xs text-slate-400">Tôi đã đọc điều kiện sử dụng link, phương thức thanh toán và chính sách sau khi mở link; tôi sẽ tự kích hoạt và kiểm tra ngày gia hạn tại Google.</label>
+                </div>
+
+                <!-- Purchase Button -->
+                <button @click="purchaseProduct()" :disabled="!agreedTerms" class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-mono font-bold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                    <span>Thanh toán bằng Ví</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nạp Tiền 2 Bước (Chuẩn QR CAO NGUYEN GIA HUY) -->
+    <div x-cloak x-show="showTopUpModal" class="fixed inset-0 z-50 overflow-y-auto" x-transition>
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showTopUpModal = false"></div>
+
+            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 text-left">
+                <button @click="showTopUpModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+
+                <div class="flex items-center gap-2 font-mono text-xs text-cyan-400">
+                    <span>// TOPUP_WALLET</span>
+                    <span class="text-slate-600">•</span>
+                    <span x-text="'BƯỚC ' + topUpStep + '/2'"></span>
+                </div>
+
+                <!-- Step 1: Chọn / Nhập Số Tiền -->
+                <template x-if="topUpStep === 1">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-white font-mono">Nhập số tiền muốn nạp</h3>
+                        <p class="text-xs text-slate-400">Số tiền nạp tối thiểu là <strong class="text-cyan-400">20.000 VNĐ</strong>.</p>
+
+                        <!-- Preset Buttons -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <button @click="topUpAmount = 20000" :class="topUpAmount === 20000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">20.000đ</button>
+                            <button @click="topUpAmount = 50000" :class="topUpAmount === 50000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">50.000đ</button>
+                            <button @click="topUpAmount = 100000" :class="topUpAmount === 100000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">100.000đ</button>
+                        </div>
+
+                        <!-- Manual Input -->
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">Số tiền tùy chỉnh (VNĐ):</label>
+                            <input type="number" min="20000" step="10000" x-model.number="topUpAmount" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500">
+                        </div>
+
+                        <button @click="goToStep2()" class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-mono font-bold hover:bg-cyan-400 transition-all">
+                            Tiếp tục thanh toán &rarr;
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Step 2: Quét Mã QR -->
+                <template x-if="topUpStep === 2">
+                    <div class="space-y-4 text-center">
+                        <div class="bg-white p-3 rounded-2xl inline-block shadow-lg">
+                            <img :src="getTopUpQrUrl()" alt="Mã QR nạp tiền Agribank" class="w-56 h-56 mx-auto object-contain" @error="$el.alt = 'Không tải được mã QR. Vui lòng thử lại.'">
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="text-sm font-bold text-white uppercase tracking-wider font-mono">CAO NGUYEN GIA HUY</div>
+                            <div class="text-xs text-slate-400 font-mono">Số tiền chuyển: <strong class="text-emerald-400" x-text="topUpAmount.toLocaleString('vi-VN') + ' VNĐ'"></strong></div>
+                            <div class="text-xs text-slate-400 font-mono">Nội dung CK: <strong class="text-cyan-400" x-text="'NAP ' + user.email.split('@')[0]"></strong></div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button @click="topUpStep = 1" class="w-1/3 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-mono text-xs hover:bg-slate-700">Quay lại</button>
+                            <button @click="confirmTopUp()" class="w-2/3 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-mono font-bold hover:bg-emerald-400">Đã chuyển khoản</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL NHẬP GMAIL GEMINI -->
+<div x-cloak x-show="showGeminiEmailModal"
+     class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+
+    <div class="absolute inset-0 bg-black/80"
+         @click="showGeminiEmailModal = false"></div>
+
+    <div class="relative bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 w-full max-w-md space-y-4">
+
+        <button @click="showGeminiEmailModal = false"
+                class="absolute top-4 right-4 text-slate-400">✕</button>
+
+        <h3 class="text-lg font-bold text-white">
+            📧 GMAIL CẦN NÂNG CẤP
+        </h3>
+
+        <p class="text-sm text-slate-300">
+            Vui lòng nhập Gmail mà bạn muốn nâng cấp.
+        </p>
+
+        <div class="text-sm text-cyan-400 font-bold"
+             x-text="selectedProduct?.name"></div>
+
+        <input type="email"
+               x-model.trim="geminiUpgradeEmail"
+               placeholder="Nhập Gmail của bạn..."
+               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white">
+
+        <button @click="confirmGeminiPurchase()"
+                class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold">
+            XÁC NHẬN MUA HÀNG
+        </button>
+
+        <button @click="showGeminiEmailModal = false; showProductModal = true"
+                class="w-full py-2 rounded-xl bg-slate-800 text-white">
+            Quay lại
+        </button>
+    </div>
+</div>
+
+    <!-- Modal Lịch Sử Đơn Hàng -->
+    <div x-cloak x-show="showOrderHistory" class="fixed inset-0 z-50 overflow-y-auto" x-transition>
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showOrderHistory = false"></div>
+            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-left">
+                <button @click="showOrderHistory = false" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                <h3 class="text-lg font-bold font-mono text-white">// LỊCH SỬ MUA HÀNG</h3>
+
+                <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <template x-for="order in user.orders" :key="order.id">
+                        <div @click="selectedOrder = order; showOrderDetail = true"
+     class="p-3 bg-slate-950 border border-slate-800/80 rounded-xl flex items-center justify-between font-mono text-xs cursor-pointer hover:border-cyan-500 transition-all">
+                            <div>
+                                <div class="font-bold text-white" x-text="order.productName"></div>
+                                <div class="text-slate-500 text-[10px]" x-text="order.date"></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-emerald-400 font-bold" x-text="order.price.toLocaleString('vi-VN') + 'đ'"></div>
+                                <div class="text-slate-400 text-[10px]" x-text="order.status"></div>
+                            </div>
+                        </div>
+                    </template>
+                    <template x-if="user.orders.length === 0">
+                        <div class="text-center py-8 text-slate-500 font-mono text-xs">Chưa có đơn hàng nào.</div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- LOCKET GOLD 30S - LINK DELIVERY -->
+<div x-cloak x-show="showDeliveryModal"
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+
+    <div class="absolute inset-0 bg-black/80"
+         @click="showDeliveryModal = false"></div>
+
+    <div class="relative bg-slate-900 border border-emerald-500 rounded-2xl p-6 w-full max-w-md">
+
+        <h2 class="text-xl font-bold text-white mb-3">
+            🎉 Mua hàng thành công!
+        </h2>
+
+        <p class="text-slate-300 text-sm mb-3">
+            Link Locket Gold 30s của bạn:
+        </p>
+
+        <div class="bg-slate-950 text-cyan-400 p-3 rounded-lg break-all text-sm mb-4"
+             x-text="deliveryLink">
+        </div>
+
+        <button @click="copyDeliveryLink()"
+                class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-3 rounded-xl">
+            📋 Sao chép link
+        </button>
+
+        <button @click="showDeliveryModal = false"
+                class="w-full mt-2 bg-slate-700 text-white py-2 rounded-xl">
+            Đóng
+        </button>
+
+    </div>
+</div>
+<!-- CHI TIẾT ĐƠN HÀNG -->
+<div x-cloak x-show="showOrderDetail"
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/80"
+         @click="showOrderDetail = false"></div>
+
+    <div class="relative bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 w-full max-w-md space-y-4">
+        <button @click="showOrderDetail = false"
+                class="absolute top-4 right-4 text-slate-400">✕</button>
+
+        <h3 class="text-lg font-bold text-white">CHI TIẾT ĐƠN HÀNG</h3>
+
+        <div class="text-sm text-white">
+            Sản phẩm:
+            <span class="text-cyan-400" x-text="selectedOrder?.productName"></span>
+        </div>
+
+        <div class="text-sm text-white">
+            Mã đơn:
+            <span class="text-slate-400" x-text="selectedOrder?.id"></span>
+        </div>
+
+        <div class="text-sm text-white">
+            Ngày mua:
+            <span class="text-slate-400" x-text="selectedOrder?.date"></span>
+        </div>
+        <!-- HIỂN THỊ GMAIL ĐÃ GỬI -->
+<template x-if="selectedOrder?.upgradeEmail">
+    <div class="space-y-2">
+        <p class="text-sm text-white font-bold">
+            Gmail cần nâng cấp:
+        </p>
+
+        <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 text-emerald-400 text-sm break-all"
+             x-text="selectedOrder.upgradeEmail">
+        </div>
+
+        <button @click="navigator.clipboard.writeText(selectedOrder.upgradeEmail); showNotification('Đã sao chép Gmail!')"
+                class="w-full py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold">
+            📋 Sao chép Gmail
+        </button>
+    </div>
+</template>
+
+        <template x-if="selectedOrder?.deliveryLink">
+            <div class="space-y-3">
+                <p class="text-sm text-emerald-400 font-bold">
+                    Link sản phẩm của bạn:
+                </p>
+
+                <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 text-cyan-400 text-xs break-all"
+                     x-text="selectedOrder.deliveryLink"></div>
+
+                <button @click="copyOrderLink()"
+                        class="w-full py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold">
+                    📋 Sao chép link
+                </button>
+            </div>
+        </template>
+
+        <template x-if="!selectedOrder?.deliveryLink">
+            <p class="text-sm text-slate-400">
+                Đơn hàng này không có link giao hàng tự động.
+            </p>
+        </template>
+
+        <button @click="showOrderDetail = false"
+                class="w-full py-2 rounded-xl bg-slate-800 text-white">
+            Đóng
+        </button>
+    </div>
+</div>
+    <!-- Toast Notification -->
+    <div x-cloak x-show="toastShow" x-transition class="fixed bottom-5 right-5 z-50 bg-slate-900 border border-cyan-500/50 text-white font-mono text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span x-text="toastMessage"></span>
+    </div>
+
+    <script>
+        function windiStore() {
+            return {
+                isLoggedIn: true,
+                user: {
+                    name: 'Cao Nguyễn Gia Huy',
+                    email: 'caonguyengiahuy@gmail.com',
+                    balance: 500000,
+                    orders: [],
+                },
+                searchQuery: '',
+                selectedCategory: 'Tất cả',
+                categories: ['Tất cả', 'AI & CÔNG VIỆC', 'PRESET & KITS', 'KEY VIP'],
+                openMenu: false,
+                showProductModal: false,
+                showTopUpModal: false,
+                showOrderHistory: false,
+                showOrderDetail: false,
+                showGeminiEmailModal: false,
+geminiUpgradeEmail: '',
+selectedOrder: null,
+                selectedProduct: null,
+                selectedPlan: { duration: '24 tháng', price: 699000 },
+                agreedTerms: false,
+                topUpStep: 1,
+                topUpAmount: 20000,
+                toastShow: false,
+                showDeliveryModal: false,
+
+deliveryLink: '',
+                toastMessage: '',
+
+                products: [
+                    {
+                        id: 1,
+                        name: 'Gemini 3 tháng',
+                        category: 'AI & CÔNG VIỆC',
+                        tagline: 'NÂNG CẤP CHÍNH CHỦ',
+                        description: 'Gói nâng cấp tài khoản cá nhân 3 tháng ổn định.',
+                        price: 129000,
+                        oldPrice: 179000,
+                        image: 'https://windistudio.app/gemini-products/gemini-3-thang.png'
+                    },
+                    {
+                        id: 2,
+                        name: 'Gemini Pro nâng chính chủ',
+                        category: 'AI & CÔNG VIỆC',
+                        tagline: '6 / 12 / 24 THÁNG + YOUTUBE PREMIUM',
+                        description: 'Nâng cấp chính chủ full tính năng Antigravity, Argon 4, Opus 5.5, Sonnet 5.5.',
+                        minPrice: 239000,
+                        image: 'https://windistudio.app/gemini-products/gemini-chinh-chu.png'
+                    },
+                    {
+                        id: 3,
+                        name: 'Locket Gold 30s  ',
+                        category: 'Module',
+                        tagline: 'Shadowrocket',
+                        description: ' Bảo hành toàn thời gian sử dụng.',
+                        price: 49000,
+                        oldPrice: 199000,
+                        image: 'https://lh3.googleusercontent.com/d/1X5Xp62-3uI1_K98yA9nCjHk6JjM1q-p1'
+                    },
+                    {
+                        id: 4,
+                        name: 'Locket, Youtube & Sportify',
+                        category: 'Modules',
+                        tagline: 'Shadowrocket',
+                        description: 'Bảo hành toàn thời gian sử dụng.',
+                        price: 79000,
+                        oldPrice: 239000,
+                        image: 'https://lh3.googleusercontent.com/d/1X5Xp62-3uI1_K98yA9nCjHk6JjM1q-p1'
+                    }
+                ],
+
+                get filteredProducts() {
+                    return this.products.filter(p => {
+                        const matchesCategory = this.selectedCategory === 'Tất cả' || p.category === this.selectedCategory;
+                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                initData() {},
+
+                openProductModal(product) {
+                    this.selectedProduct = product;
+                    if (product.id === 2) {
+                        this.selectedPlan = { duration: '24 tháng', price: 699000 };
+                    }
+                    this.agreedTerms = false;
+                    this.showProductModal = true;
+                },
+
+                purchaseProduct() {
+    const id = Number(this.selectedProduct?.id);
+
+    // Hai sản phẩm Gemini phải nhập Gmail trước
+    if (id === 1 || id === 2) {
+        this.geminiUpgradeEmail = '';
+        this.showProductModal = false;
+        this.showGeminiEmailModal = true;
+        return;
+    }
+
+    const price = this.selectedProduct.price;
+
+    if (this.user.balance < price) {
+        this.showNotification('Số dư ví không đủ, vui lòng nạp thêm tiền!');
+        this.showProductModal = false;
+        this.showTopUpModal = true;
+        return;
+    }
+
+    this.user.balance -= price;
+
+    const link = id === 3
+        ? 'https://raw.githubusercontent.com/angl1206205-cmyk/BY_ThanhAnhD18TDHHTD2/980556fb76a1f4f1abbbb341d0b3e5acbe1ea9d7/TIKTOK%40tolaanne_'
+        : id === 4
+        ? 'https://raw.githubusercontent.com/Gaucuto/loz/refs/heads/main/test'
+        : '';
+
+    this.user.orders.unshift({
+        id: 'ORD-' + Math.floor(Math.random() * 9000 + 1000),
+        productName: this.selectedProduct.name,
+        price: price,
+        date: new Date().toISOString().split('T')[0],
+        status: 'Đã hoàn thành',
+        deliveryLink: link,
+        upgradeEmail: ''
+    });
+
+    this.showProductModal = false;
+
+    if (link) {
+        this.deliveryLink = link;
+        this.showDeliveryModal = true;
+    } else {
+        this.showNotification('Mua hàng thành công!');
+    }
+},
+
+// XÁC NHẬN MUA GEMINI
+confirmGeminiPurchase() {
+    const email = String(this.geminiUpgradeEmail || '').trim().toLowerCase();
+
+    if (!/^[^\s@]+@gmail\.com$/.test(email)) {
+        this.showNotification('Vui lòng nhập Gmail hợp lệ!');
+        return;
+    }
+
+    const id = Number(this.selectedProduct?.id);
+
+    const price = id === 2
+        ? this.selectedPlan.price
+        : this.selectedProduct.price;
+
+    if (this.user.balance < price) {
+        this.showGeminiEmailModal = false;
+        this.showTopUpModal = true;
+        this.showNotification('Số dư ví không đủ!');
+        return;
+    }
+
+    this.user.balance -= price;
+
+    this.user.orders.unshift({
+        id: 'ORD-' + Math.floor(Math.random() * 9000 + 1000),
+
+        productName: this.selectedProduct.name +
+            (id === 2 ? ' (' + this.selectedPlan.duration + ')' : ''),
+
+        price: price,
+        date: new Date().toISOString().split('T')[0],
+
+        status: 'Đã tiếp nhận Gmail',
+
+        upgradeEmail: email,
+        deliveryLink: ''
+    });
+
+    this.geminiUpgradeEmail = '';
+    this.showGeminiEmailModal = false;
+
+    this.showNotification('Mua hàng thành công! Gmail đã được lưu.');
+},
+
+                getTopUpQrUrl() {
+                    // VietQR: Agribank (BIN 970405), tự điền số tiền và nội dung chuyển khoản.
+                    const bankBin = '970405';
+                    const accountNumber = '8888783397985';
+                    const accountName = 'CAO NGUYEN GIA HUY';
+                    const amount = Math.round(Number(this.topUpAmount) || 0);
+                    const transferNote = ('NAP ' + String(this.user.email || 'KHACH').split('@')[0])
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^A-Za-z0-9 ]/g, '').trim().slice(0, 25);
+                    return `https://img.vietqr.io/image/${bankBin}-${accountNumber}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferNote)}&accountName=${encodeURIComponent(accountName)}`;
+                },
+
+                goToStep2() {
+                    const amount = Number(this.topUpAmount);
+                    if (!Number.isFinite(amount) || amount < 20000 || !Number.isInteger(amount)) {
+                        this.showNotification('Số tiền nạp tối thiểu là 20.000 VNĐ và phải là số nguyên.');
+                        return;
+                    }
+                    this.topUpAmount = amount;
+                    this.topUpStep = 2;
+                },
+
+                confirmTopUp() {
+                    // Không tự cộng số dư chỉ vì người dùng bấm nút.
+                    // Cần backend xác minh giao dịch ngân hàng thành công trước khi cộng ví.
+                    this.showNotification('Đã ghi nhận yêu cầu. Số dư sẽ được cập nhật sau khi hệ thống xác minh thanh toán.');
+                    this.showTopUpModal = false;
+                    this.topUpStep = 1;
+                },
+                async copyDeliveryLink() {
+    try {
+        await navigator.clipboard.writeText(this.deliveryLink);
+        this.showNotification('Đã sao chép link thành công!');
+    } catch (e) {
+        const input = document.createElement('textarea');
+        input.value = this.deliveryLink;
+        document.body.appendChild(input);
+        input.select();
+
+        const success = document.execCommand('copy');
+        input.remove();
+
+        this.showNotification(
+            success ? 'Đã sao chép link!' : 'Không thể sao chép link!'
+        );
+    }
+},
+                async copyOrderLink() {
+    if (!this.selectedOrder?.deliveryLink) return;
+
+    try {
+        await navigator.clipboard.writeText(this.selectedOrder.deliveryLink);
+        this.showNotification('Đã sao chép link thành công!');
+    } catch (e) {
+        const input = document.createElement('textarea');
+        input.value = this.selectedOrder.deliveryLink;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+        this.showNotification('Đã sao chép link!');
+    }
+},
+
+                showNotification(msg) {
+                    this.toastMessage = msg;
+                    this.toastShow = true;
+                    setTimeout(() => { this.toastShow = false; }, 3500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
