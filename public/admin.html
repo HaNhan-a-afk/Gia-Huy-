@@ -1,1 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gia Huy Shop - Admin</title>
 
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen">
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-cyan-400">
+          Gia Huy Shop
+        </h1>
+        <p class="text-slate-400 mt-1">
+          Quản trị nạp tiền
+        </p>
+      </div>
+
+      <button
+        onclick="loadTopups()"
+        class="px-4 py-2 rounded-lg bg-cyan-500 text-black font-bold">
+        🔄 Làm mới
+      </button>
+    </div>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+
+      <div class="p-5 border-b border-slate-800">
+        <h2 class="text-xl font-bold">
+          Yêu cầu nạp tiền
+        </h2>
+
+        <p id="message" class="text-sm text-slate-400 mt-2"></p>
+      </div>
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-sm">
+          <thead class="bg-slate-800">
+            <tr>
+              <th class="p-4 text-left">ID</th>
+              <th class="p-4 text-left">Tài khoản</th>
+              <th class="p-4 text-left">Email</th>
+              <th class="p-4 text-left">Số tiền</th>
+              <th class="p-4 text-left">Nội dung</th>
+              <th class="p-4 text-left">Trạng thái</th>
+              <th class="p-4 text-left">Thao tác</th>
+            </tr>
+          </thead>
+
+          <tbody id="topupList">
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+  </div>
+
+<script>
+
+const API = "https://gia-huy.onrender.com";
+
+function formatMoney(number) {
+  return Number(number).toLocaleString("vi-VN") + "đ";
+}
+
+async function loadTopups() {
+
+  const message = document.getElementById("message");
+  const list = document.getElementById("topupList");
+
+  message.textContent = "Đang tải...";
+  list.innerHTML = "";
+
+  try {
+
+    const response = await fetch(
+      API + "/api/admin/topups",
+      {
+        credentials: "include"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      message.textContent =
+        data.message || "Không thể tải dữ liệu";
+      return;
+    }
+
+    message.textContent =
+      `Có ${data.transactions.length} giao dịch`;
+
+    if (data.transactions.length === 0) {
+
+      list.innerHTML = `
+        <tr>
+          <td colspan="7"
+              class="p-8 text-center text-slate-500">
+            Chưa có giao dịch nạp tiền
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    data.transactions.forEach(item => {
+
+      const isPending =
+        item.status === "Chờ xử lý";
+
+      const tr = document.createElement("tr");
+
+      tr.className =
+        "border-t border-slate-800 hover:bg-slate-800/50";
+
+      tr.innerHTML = `
+
+        <td class="p-4">
+          ${item.id}
+        </td>
+
+        <td class="p-4 font-bold text-cyan-400">
+          ${item.username}
+        </td>
+
+        <td class="p-4 text-slate-300">
+          ${item.email || ""}
+        </td>
+
+        <td class="p-4 font-bold text-emerald-400">
+          ${formatMoney(item.amount)}
+        </td>
+
+        <td class="p-4 text-slate-400">
+          ${item.note || ""}
+        </td>
+
+        <td class="p-4">
+          ${
+            isPending
+              ? `<span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
+                   Chờ xử lý
+                 </span>`
+              : `<span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
+                   ${item.status}
+                 </span>`
+          }
+        </td>
+
+        <td class="p-4">
+
+          ${
+            isPending
+              ? `<button
+                  onclick="approveTopup(${item.id})"
+                  class="px-4 py-2 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400">
+                  ✓ Duyệt
+                </button>`
+              : `<span class="text-slate-500">
+                  Đã xử lý
+                </span>`
+          }
+
+        </td>
+      `;
+
+      list.appendChild(tr);
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "Không kết nối được tới server";
+  }
+}
+
+
+async function approveTopup(id) {
+
+  const ok = confirm(
+    "Bạn có chắc muốn duyệt giao dịch #" + id + "?"
+  );
+
+  if (!ok) return;
+
+  try {
+
+    const response = await fetch(
+      API + "/api/admin/topups/" + id + "/approve",
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+
+      alert(
+        data.message || "Không thể duyệt giao dịch"
+      );
+
+      return;
+    }
+
+    alert(
+      "Đã duyệt nạp tiền thành công!"
+    );
+
+    loadTopups();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Không kết nối được tới server"
+    );
+  }
+}
+
+loadTopups();
+
+</script>
+
+</body>
+</html>
