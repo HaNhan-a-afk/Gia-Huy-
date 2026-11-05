@@ -30,6 +30,9 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+const path = require("path");
+
+app.use(express.static(path.join(__dirname, "public")));
 
 
 // ===============================
@@ -77,6 +80,9 @@ async function initDatabase() {
 // ===============================
 // TRANG KIỂM TRA SERVER
 // ===============================
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 app.get("/", (req, res) => {
   res.json({
     success: true,
