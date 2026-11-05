@@ -435,6 +435,56 @@ app.post("/api/orders", requireAuth, async (req, res) => {
     client.release();
   }
 });
+// ===============================
+// TẠO YÊU CẦU NẠP TIỀN
+// ===============================
+app.post("/api/topup", requireAuth, async (req, res) => {
+  try {
+    const { amount, note } = req.body;
+
+    const money = Number(amount);
+
+    if (!Number.isFinite(money) || money <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Số tiền nạp không hợp lệ"
+      });
+    }
+
+    if (money < 10000) {
+      return res.status(400).json({
+        success: false,
+        message: "Số tiền nạp tối thiểu là 10.000đ"
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO transactions
+       (user_id, type, amount, note, status)
+       VALUES ($1, 'topup', $2, $3, 'Chờ xử lý')
+       RETURNING *`,
+      [
+        req.user.id,
+        money,
+        note || "Yêu cầu nạp tiền"
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: "Đã tạo yêu cầu nạp tiền",
+      transaction: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể tạo yêu cầu nạp tiền"
+    });
+  }
+});
 
 
 // ===============================
