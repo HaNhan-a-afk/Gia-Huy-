@@ -256,6 +256,7 @@ async function adminLogin() {
 }
 
 window.adminLoggedIn = true;
+    document.getElementById("adminUsersSection").style.display = "block";
 
 
     document.getElementById("loginBox")
@@ -538,7 +539,7 @@ function formatMoney(number) {
 <!-- QUẢN LÝ TÀI KHOẢN -->
 <!-- ========================= -->
 
-<div style="margin-top:40px;">
+<div id="adminUsersSection" style="margin-top:40px; display:none;">
   <h2>👥 Quản lý tài khoản</h2>
 
   <button onclick="loadAdminUsers()"
