@@ -1224,6 +1224,7 @@ async logout() {
         });
 
         const data = await res.json();
+        console.log("KẾT QUẢ MUA HÀNG:", data);
 
         if (!res.ok || !data.success) {
             this.showNotification(data.message || 'Mua hàng thất bại!');
