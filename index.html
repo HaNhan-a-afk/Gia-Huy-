@@ -1353,10 +1353,11 @@ async confirmGeminiPurchase() {
 
     try {
         const res = await fetch('https://gia-huy.onrender.com/api/topup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
+    },
             credentials: 'include',
             body: JSON.stringify({
                 amount: amount,
