@@ -247,11 +247,15 @@ async function adminLogin() {
 
     if (data.user.role !== "admin") {
 
-      message.textContent =
-        "Tài khoản này không có quyền admin";
+  window.adminLoggedIn = false;
 
-      return;
-    }
+  message.textContent =
+    "Tài khoản này không có quyền admin";
+
+  return;
+}
+
+window.adminLoggedIn = true;
 
 
     document.getElementById("loginBox")
@@ -569,6 +573,7 @@ function formatMoney(number) {
 </div>
 
 <script>
+  window.adminLoggedIn = false;
 async function loadAdminUsers() {
   const tbody = document.getElementById("adminUsersTableBody");
 
@@ -636,6 +641,10 @@ async function loadAdminUsers() {
   }
 }
   async function editUserBalance(userId, username) {
+      if (!window.adminLoggedIn) {
+    alert("❌ Bạn phải đăng nhập tài khoản admin trước.");
+    return;
+  }
   const input = prompt(
     `Nhập số dư mới cho tài khoản "${username}":`
   );
