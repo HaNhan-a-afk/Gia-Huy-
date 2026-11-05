@@ -314,31 +314,35 @@ app.get("/api/me", async (req, res) => {
 // MIDDLEWARE KIỂM TRA ĐĂNG NHẬP
 // ===============================
 function requireAuth(req, res, next) {
-  try {
-    const token =
-  req.cookies.token ||
-  (req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-      ? req.headers.authorization.slice(7)
-      : null);
+    try {
+        const token =
+            req.cookies.token ||
+            (
+                req.headers.authorization &&
+                req.headers.authorization.startsWith("Bearer ")
+                    ? req.headers.authorization.slice(7)
+                    : null
+            );
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Bạn chưa đăng nhập"
-      });
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Chưa đăng nhập"
+            });
+        }
+
+        req.user = jwt.verify(token, JWT_SECRET);
+
+        next();
+
+    } catch (error) {
+        console.error("Auth error:", error);
+
+        return res.status(401).json({
+            success: false,
+            message: "Phiên đăng nhập hết hạn"
+        });
     }
-
-    req.user = jwt.verify(token, JWT_SECRET);
-
-    next();
-
-  } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: "Phiên đăng nhập hết hạn"
-    });
-  }
 }
 // ===============================
 // KIỂM TRA QUYỀN ADMIN
