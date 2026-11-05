@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Gia Huy Shop - Admin</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -10,74 +11,286 @@
 
 <body class="bg-slate-950 text-white min-h-screen">
 
-  <div class="max-w-6xl mx-auto px-4 py-8">
+  <!-- =========================
+       ĐĂNG NHẬP ADMIN
+  ========================== -->
+  <div id="loginBox" class="min-h-screen flex items-center justify-center px-4">
 
-    <div class="flex justify-between items-center mb-8">
-      <div>
+    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6">
+
+      <div class="text-center mb-6">
+
         <h1 class="text-3xl font-bold text-cyan-400">
           Gia Huy Shop
         </h1>
-        <p class="text-slate-400 mt-1">
-          Quản trị nạp tiền
+
+        <p class="text-slate-400 mt-2">
+          Đăng nhập quản trị
         </p>
-      </div>
-
-      <button
-        onclick="loadTopups()"
-        class="px-4 py-2 rounded-lg bg-cyan-500 text-black font-bold">
-        🔄 Làm mới
-      </button>
-    </div>
-
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-
-      <div class="p-5 border-b border-slate-800">
-        <h2 class="text-xl font-bold">
-          Yêu cầu nạp tiền
-        </h2>
-
-        <p id="message" class="text-sm text-slate-400 mt-2"></p>
-      </div>
-
-      <div class="overflow-x-auto">
-
-        <table class="w-full text-sm">
-          <thead class="bg-slate-800">
-            <tr>
-              <th class="p-4 text-left">ID</th>
-              <th class="p-4 text-left">Tài khoản</th>
-              <th class="p-4 text-left">Email</th>
-              <th class="p-4 text-left">Số tiền</th>
-              <th class="p-4 text-left">Nội dung</th>
-              <th class="p-4 text-left">Trạng thái</th>
-              <th class="p-4 text-left">Thao tác</th>
-            </tr>
-          </thead>
-
-          <tbody id="topupList">
-          </tbody>
-        </table>
 
       </div>
+
+      <div class="space-y-4">
+
+        <div>
+          <label class="block text-sm text-slate-400 mb-1">
+            Tài khoản
+          </label>
+
+          <input
+            id="username"
+            type="text"
+            placeholder="Nhập tài khoản"
+            class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-400"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm text-slate-400 mb-1">
+            Mật khẩu
+          </label>
+
+          <input
+            id="password"
+            type="password"
+            placeholder="Nhập mật khẩu"
+            class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-cyan-400"
+          >
+        </div>
+
+        <button
+          onclick="adminLogin()"
+          class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold hover:bg-cyan-400"
+        >
+          Đăng nhập Admin
+        </button>
+
+        <p id="loginMessage"
+           class="text-center text-sm text-red-400">
+        </p>
+
+      </div>
+
     </div>
 
   </div>
+
+
+  <!-- =========================
+       TRANG ADMIN
+  ========================== -->
+  <div id="adminBox" class="hidden">
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+
+        <div>
+
+          <h1 class="text-3xl font-bold text-cyan-400">
+            Gia Huy Shop
+          </h1>
+
+          <p class="text-slate-400 mt-1">
+            Quản trị nạp tiền
+          </p>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button
+            onclick="loadTopups()"
+            class="px-4 py-2 rounded-lg bg-cyan-500 text-black font-bold hover:bg-cyan-400"
+          >
+            🔄 Làm mới
+          </button>
+
+          <button
+            onclick="logoutAdmin()"
+            class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30"
+          >
+            Đăng xuất
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+
+        <div class="p-5 border-b border-slate-800">
+
+          <h2 class="text-xl font-bold">
+            Yêu cầu nạp tiền
+          </h2>
+
+          <p id="message" class="text-sm text-slate-400 mt-2">
+            Đang kiểm tra...
+          </p>
+
+        </div>
+
+
+        <div class="overflow-x-auto">
+
+          <table class="w-full text-sm">
+
+            <thead class="bg-slate-800">
+
+              <tr>
+
+                <th class="p-4 text-left">ID</th>
+
+                <th class="p-4 text-left">
+                  Tài khoản
+                </th>
+
+                <th class="p-4 text-left">
+                  Email
+                </th>
+
+                <th class="p-4 text-left">
+                  Số tiền
+                </th>
+
+                <th class="p-4 text-left">
+                  Nội dung
+                </th>
+
+                <th class="p-4 text-left">
+                  Trạng thái
+                </th>
+
+                <th class="p-4 text-left">
+                  Thao tác
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="topupList"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
 
 <script>
 
 const API = "https://gia-huy.onrender.com";
 
-function formatMoney(number) {
-  return Number(number).toLocaleString("vi-VN") + "đ";
+
+/* =========================
+   ĐĂNG NHẬP ADMIN
+========================= */
+
+async function adminLogin() {
+
+  const username =
+    document.getElementById("username").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  const message =
+    document.getElementById("loginMessage");
+
+  message.textContent = "";
+
+  if (!username || !password) {
+
+    message.textContent =
+      "Vui lòng nhập tài khoản và mật khẩu";
+
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      API + "/api/login",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify({
+          username,
+          password
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+
+      message.textContent =
+        data.message || "Đăng nhập thất bại";
+
+      return;
+    }
+
+
+    if (data.user.role !== "admin") {
+
+      message.textContent =
+        "Tài khoản này không có quyền admin";
+
+      return;
+    }
+
+
+    document.getElementById("loginBox")
+      .classList.add("hidden");
+
+    document.getElementById("adminBox")
+      .classList.remove("hidden");
+
+    loadTopups();
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.textContent =
+      "Không kết nối được tới server";
+
+  }
+
 }
+
+
+/* =========================
+   TẢI GIAO DỊCH
+========================= */
 
 async function loadTopups() {
 
-  const message = document.getElementById("message");
-  const list = document.getElementById("topupList");
+  const message =
+    document.getElementById("message");
 
-  message.textContent = "Đang tải...";
+  const list =
+    document.getElementById("topupList");
+
+  message.textContent =
+    "Đang tải dữ liệu...";
+
   list.innerHTML = "";
+
 
   try {
 
@@ -90,14 +303,19 @@ async function loadTopups() {
 
     const data = await response.json();
 
+
     if (!response.ok || !data.success) {
+
       message.textContent =
         data.message || "Không thể tải dữ liệu";
+
       return;
     }
 
+
     message.textContent =
       `Có ${data.transactions.length} giao dịch`;
+
 
     if (data.transactions.length === 0) {
 
@@ -113,15 +331,19 @@ async function loadTopups() {
       return;
     }
 
+
     data.transactions.forEach(item => {
 
-      const isPending =
+      const pending =
         item.status === "Chờ xử lý";
 
-      const tr = document.createElement("tr");
+
+      const tr =
+        document.createElement("tr");
 
       tr.className =
-        "border-t border-slate-800 hover:bg-slate-800/50";
+        "border-t border-slate-800";
+
 
       tr.innerHTML = `
 
@@ -146,37 +368,53 @@ async function loadTopups() {
         </td>
 
         <td class="p-4">
+
           ${
-            isPending
-              ? `<span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
-                   Chờ xử lý
-                 </span>`
-              : `<span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
-                   ${item.status}
-                 </span>`
+            pending
+
+            ? `
+              <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
+                Chờ xử lý
+              </span>
+            `
+
+            : `
+              <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
+                ${item.status}
+              </span>
+            `
           }
+
         </td>
 
         <td class="p-4">
 
           ${
-            isPending
-              ? `<button
-                  onclick="approveTopup(${item.id})"
-                  class="px-4 py-2 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400">
-                  ✓ Duyệt
-                </button>`
-              : `<span class="text-slate-500">
-                  Đã xử lý
-                </span>`
+            pending
+
+            ? `
+              <button
+                onclick="approveTopup(${item.id})"
+                class="px-4 py-2 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400">
+                ✓ Duyệt
+              </button>
+            `
+
+            : `
+              <span class="text-slate-500">
+                Đã xử lý
+              </span>
+            `
           }
 
         </td>
+
       `;
 
       list.appendChild(tr);
 
     });
+
 
   } catch (error) {
 
@@ -184,17 +422,27 @@ async function loadTopups() {
 
     message.textContent =
       "Không kết nối được tới server";
+
   }
+
 }
 
 
+/* =========================
+   DUYỆT NẠP TIỀN
+========================= */
+
 async function approveTopup(id) {
 
-  const ok = confirm(
-    "Bạn có chắc muốn duyệt giao dịch #" + id + "?"
-  );
+  const ok =
+    confirm(
+      "Bạn có chắc muốn duyệt giao dịch #" +
+      id +
+      "?"
+    );
 
   if (!ok) return;
+
 
   try {
 
@@ -206,22 +454,29 @@ async function approveTopup(id) {
       }
     );
 
-    const data = await response.json();
+
+    const data =
+      await response.json();
+
 
     if (!response.ok || !data.success) {
 
       alert(
-        data.message || "Không thể duyệt giao dịch"
+        data.message ||
+        "Không thể duyệt giao dịch"
       );
 
       return;
     }
 
+
     alert(
       "Đã duyệt nạp tiền thành công!"
     );
 
+
     loadTopups();
+
 
   } catch (error) {
 
@@ -230,10 +485,49 @@ async function approveTopup(id) {
     alert(
       "Không kết nối được tới server"
     );
+
   }
+
 }
 
-loadTopups();
+
+/* =========================
+   ĐĂNG XUẤT
+========================= */
+
+async function logoutAdmin() {
+
+  try {
+
+    await fetch(
+      API + "/api/logout",
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+
+  } catch (error) {}
+
+  document.getElementById("adminBox")
+    .classList.add("hidden");
+
+  document.getElementById("loginBox")
+    .classList.remove("hidden");
+
+}
+
+
+/* =========================
+   FORMAT TIỀN
+========================= */
+
+function formatMoney(number) {
+
+  return Number(number)
+    .toLocaleString("vi-VN") + "đ";
+
+}
 
 </script>
 
