@@ -554,6 +554,7 @@ function formatMoney(number) {
           <th>Email</th>
           <th>Số dư</th>
           <th>Quyền</th>
+          <th>Thao tác</th>
           <th>Ngày tạo</th>
         </tr>
       </thead>
@@ -608,6 +609,13 @@ async function loadAdminUsers() {
         <td>${Number(user.balance || 0).toLocaleString("vi-VN")}đ</td>
         <td>${user.role}</td>
         <td>
+  <button
+    onclick="editUserBalance(${user.id}, '${user.username}')"
+    style="padding:6px 10px;cursor:pointer;">
+    💰 Chỉnh số dư
+  </button>
+</td>
+        <td>
           ${user.created_at
             ? new Date(user.created_at).toLocaleString("vi-VN")
             : ""}
@@ -625,6 +633,59 @@ async function loadAdminUsers() {
         </td>
       </tr>
     `;
+  }
+}
+  async function editUserBalance(userId, username) {
+  const input = prompt(
+    `Nhập số dư mới cho tài khoản "${username}":`
+  );
+
+  if (input === null) return;
+
+  const amount = Number(input);
+
+  if (!Number.isFinite(amount) || amount < 0) {
+    alert("❌ Số dư không hợp lệ");
+    return;
+  }
+
+  const ok = confirm(
+    `Đặt số dư của "${username}" thành ${Math.floor(amount).toLocaleString("vi-VN")}đ?`
+  );
+
+  if (!ok) return;
+
+  try {
+    const res = await fetch(
+      `https://gia-huy.onrender.com/api/admin/users/${userId}/balance`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: Math.floor(amount)
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("❌ " + (data.message || "Không thể chỉnh số dư"));
+      return;
+    }
+
+    alert(
+      `✅ Đã cập nhật số dư của ${username}`
+    );
+
+    loadAdminUsers();
+
+  } catch (error) {
+    console.error(error);
+    alert("❌ Không thể kết nối backend");
   }
 }
 </script>
