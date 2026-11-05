@@ -645,10 +645,10 @@ async loadOrders() {
         if (data.success) {
             this.user.orders = data.orders || [];
         }
-    } catch (error) {
+        } catch (error) {
         console.error('Không thể tải đơn hàng:', error);
     }
-},,
+},
 
                 openProductModal(product) {
                     this.selectedProduct = product;
