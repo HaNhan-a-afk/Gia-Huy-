@@ -287,82 +287,216 @@
         </div>
     </div>
 
-    <!-- Modal Nạp Tiền 2 Bước (Chuẩn QR CAO NGUYEN GIA HUY) -->
-    <div x-cloak x-show="showTopUpModal" class="fixed inset-0 z-50 overflow-y-auto" x-transition>
-        <div class="min-h-screen px-4 flex items-center justify-center">
-            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showTopUpModal = false"></div>
+    <!-- Modal Nạp Tiền 2 Bước -->
+<div x-cloak x-show="showTopUpModal"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     x-transition>
 
-            <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 text-left">
-                <button @click="showTopUpModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    <div class="min-h-screen px-4 flex items-center justify-center">
 
-                <div class="flex items-center gap-2 font-mono text-xs text-cyan-400">
-                    <span>// TOPUP_WALLET</span>
-                    <span class="text-slate-600">•</span>
-                    <span x-text="'BƯỚC ' + topUpStep + '/2'"></span>
-                </div>
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+             @click="showTopUpModal = false"></div>
 
-                <!-- Step 1: Chọn / Nhập Số Tiền -->
-                <template x-if="topUpStep === 1">
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-bold text-white font-mono">Nhập số tiền muốn nạp</h3>
-                        <p class="text-xs text-slate-400">Số tiền nạp tối thiểu là <strong class="text-cyan-400">20.000 VNĐ</strong>.</p>
+        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 text-left">
 
-                        <!-- Preset Buttons -->
-                        <div class="grid grid-cols-3 gap-2">
-                            <button @click="topUpAmount = 20000" :class="topUpAmount === 20000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">20.000đ</button>
-                            <button @click="topUpAmount = 50000" :class="topUpAmount === 50000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">50.000đ</button>
-                            <button @click="topUpAmount = 100000" :class="topUpAmount === 100000 ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400' : 'border-slate-800 bg-slate-950 text-slate-400'" class="py-2 border rounded-xl font-mono text-xs transition-all">100.000đ</button>
-                        </div>
+            <button
+                @click="showTopUpModal = false"
+                class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
 
-                        <!-- Manual Input -->
-                        <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">Số tiền tùy chỉnh (VNĐ):</label>
-                            <input type="number" min="20000" step="10000" x-model.number="topUpAmount" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500">
-                        </div>
+            <div class="flex items-center gap-2 font-mono text-xs text-cyan-400">
+                <span>// TOPUP_WALLET</span>
+                <span class="text-slate-600">•</span>
+                <span x-text="'BƯỚC ' + topUpStep + '/2'"></span>
+            </div>
 
-                        <button @click="goToStep2()" class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-mono font-bold hover:bg-cyan-400 transition-all">
-                            Tiếp tục thanh toán &rarr;
+            <!-- BƯỚC 1 -->
+            <template x-if="topUpStep === 1">
+                <div class="space-y-4">
+
+                    <h3 class="text-lg font-bold text-white font-mono">
+                        Nhập số tiền muốn nạp
+                    </h3>
+
+                    <p class="text-xs text-slate-400">
+                        Số tiền nạp tối thiểu là
+                        <strong class="text-cyan-400">
+                            20.000 VNĐ
+                        </strong>.
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-2">
+
+                        <button
+                            @click="topUpAmount = 20000"
+                            :class="topUpAmount === 20000
+                                ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400'
+                                : 'border-slate-800 bg-slate-950 text-slate-400'"
+                            class="py-2 border rounded-xl font-mono text-xs transition-all">
+                            20.000đ
                         </button>
+
+                        <button
+                            @click="topUpAmount = 50000"
+                            :class="topUpAmount === 50000
+                                ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400'
+                                : 'border-slate-800 bg-slate-950 text-slate-400'"
+                            class="py-2 border rounded-xl font-mono text-xs transition-all">
+                            50.000đ
+                        </button>
+
+                        <button
+                            @click="topUpAmount = 100000"
+                            :class="topUpAmount === 100000
+                                ? 'border-cyan-500 bg-cyan-950/40 text-cyan-400'
+                                : 'border-slate-800 bg-slate-950 text-slate-400'"
+                            class="py-2 border rounded-xl font-mono text-xs transition-all">
+                            100.000đ
+                        </button>
+
                     </div>
-                </template>
 
-                <!-- Step 2: Quét Mã QR -->
-                <template x-if="topUpStep === 2">
-                    <div class="space-y-4 text-center">
-                        <div class="bg-white p-3 rounded-2xl inline-block shadow-lg">
-                            <img :src="getTopUpQrUrl()" alt="Mã QR nạp tiền Agribank" class="w-56 h-56 mx-auto object-contain" @error="$el.alt = 'Không tải được mã QR. Vui lòng thử lại.'">
+                    <div>
+                        <label class="block text-xs font-mono text-slate-400 mb-1">
+                            Số tiền tùy chỉnh (VNĐ):
+                        </label>
+
+                        <input
+                            type="number"
+                            min="20000"
+                            step="10000"
+                            x-model.number="topUpAmount"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 font-mono text-sm focus:outline-none focus:border-cyan-500">
+                    </div>
+
+                    <button
+                        @click="goToStep2()"
+                        class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-mono font-bold hover:bg-cyan-400 transition-all">
+                        Tiếp tục thanh toán →
+                    </button>
+
+                </div>
+            </template>
+
+            <!-- BƯỚC 2 -->
+            <template x-if="topUpStep === 2">
+                <div class="space-y-4 text-center">
+
+                    <div class="bg-white p-3 rounded-2xl inline-block shadow-lg">
+
+                        <img
+                            :src="getTopUpQrUrl()"
+                            alt="Mã QR nạp tiền Agribank"
+                            class="w-56 h-56 mx-auto object-contain"
+                            @error="$el.alt = 'Không tải được mã QR. Vui lòng thử lại.'">
+
+                    </div>
+
+                    <div class="space-y-1">
+
+                        <div class="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                            CAO NGUYEN GIA HUY
                         </div>
 
-                        <div class="space-y-1">
-                            <div class="text-sm font-bold text-white uppercase tracking-wider font-mono">CAO NGUYEN GIA HUY</div>
-                            <div class="text-xs text-slate-400 font-mono">Số tiền chuyển: <strong class="text-emerald-400" x-text="topUpAmount.toLocaleString('vi-VN') + ' VNĐ'"></strong></div>
-                            <div class="text-xs text-slate-400 font-mono">Nội dung CK: <strong class="text-cyan-400" x-text="'NAP ' + user.email.split('@')[0]"></strong></div>
+                        <div class="text-xs text-slate-400 font-mono">
+                            Số tiền chuyển:
+                            <strong
+                                class="text-emerald-400"
+                                x-text="topUpAmount.toLocaleString('vi-VN') + ' VNĐ'">
+                            </strong>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button @click="topUpStep = 1" class="w-1/3 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-mono text-xs hover:bg-slate-700">Quay lại</button>
-                            
-        <p class="text-sm text-slate-300">
-            Vui lòng nhập Gmail mà bạn muốn nâng cấp.
-        </p>
+                        <div class="text-xs text-slate-400 font-mono">
+                            Nội dung CK:
+                            <strong
+                                class="text-cyan-400"
+                                x-text="'NAP ' + (user.email || '').split('@')[0]">
+                            </strong>
+                        </div>
 
-        <div class="text-sm text-cyan-400 font-bold"
-             x-text="selectedProduct?.name"></div>
+                    </div>
 
-        <input type="email"
-               x-model.trim="geminiUpgradeEmail"
-               placeholder="Nhập Gmail của bạn..."
-               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white">
+                    <div class="flex gap-2">
 
-        <button @click="confirmGeminiPurchase()"
-                class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold">
+                        <button
+                            @click="topUpStep = 1"
+                            class="w-1/3 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-mono text-xs hover:bg-slate-700">
+                            Quay lại
+                        </button>
+
+                        <button
+                            @click="confirmTopUp()"
+                            class="w-2/3 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-mono font-bold hover:bg-emerald-400">
+                            Đã chuyển khoản
+                        </button>
+
+                    </div>
+
+                </div>
+            </template>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL NHẬP GMAIL GEMINI -->
+<div
+    x-cloak
+    x-show="showGeminiEmailModal"
+    class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    x-transition>
+
+    <div
+        class="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+        @click="showGeminiEmailModal = false">
+    </div>
+
+    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+
+        <button
+            @click="showGeminiEmailModal = false"
+            class="absolute top-4 right-4 text-slate-400 hover:text-white">
+            ✕
+        </button>
+
+        <div>
+            <h3 class="text-lg font-bold text-white font-mono">
+                Thông tin nâng cấp
+            </h3>
+
+            <p class="text-sm text-slate-300 mt-2">
+                Vui lòng nhập Gmail mà bạn muốn nâng cấp.
+            </p>
+        </div>
+
+        <div
+            class="text-sm text-cyan-400 font-bold"
+            x-text="selectedProduct?.name">
+        </div>
+
+        <input
+            type="email"
+            x-model.trim="geminiUpgradeEmail"
+            placeholder="Nhập Gmail của bạn..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white">
+
+        <button
+            @click="confirmGeminiPurchase()"
+            class="w-full py-3 rounded-xl bg-cyan-500 text-slate-950 font-bold">
             XÁC NHẬN MUA HÀNG
         </button>
 
-        <button @click="showGeminiEmailModal = false; showProductModal = true"
-                class="w-full py-2 rounded-xl bg-slate-800 text-white">
+        <button
+            @click="showGeminiEmailModal = false; showProductModal = true"
+            class="w-full py-2 rounded-xl bg-slate-800 text-white">
             Quay lại
         </button>
+
     </div>
 </div>
 
