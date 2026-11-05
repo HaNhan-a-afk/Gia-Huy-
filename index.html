@@ -1336,7 +1336,7 @@ async confirmGeminiPurchase() {
                 },
 
                 async confirmTopUp() {
-    if (!this.isLoggedIn) {
+    if (!this.isLoggedIn && !localStorage.getItem('gh_token')) {
         this.showTopUpModal = false;
         this.authMode = 'login';
         this.authError = '';
