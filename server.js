@@ -686,6 +686,58 @@ app.get("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
     });
   }
 });
+// ===============================
+// ADMIN - CHỈNH SỐ DƯ
+// ===============================
+app.post("/api/admin/users/:id/balance", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const amount = Number(req.body.amount);
+
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID tài khoản không hợp lệ"
+      });
+    }
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Số dư không hợp lệ"
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE users
+       SET balance = $1
+       WHERE id = $2
+       RETURNING id, username, email, balance, role`,
+      [Math.floor(amount), userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Đã cập nhật số dư",
+      user: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Lỗi chỉnh số dư:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể chỉnh số dư"
+    });
+  }
+});
 
 
 // ===============================
