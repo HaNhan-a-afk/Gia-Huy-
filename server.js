@@ -328,6 +328,19 @@ function requireAuth(req, res, next) {
     });
   }
 }
+// ===============================
+// KIỂM TRA QUYỀN ADMIN
+// ===============================
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Bạn không có quyền admin"
+    });
+  }
+
+  next();
+}
 
 
 // ===============================
@@ -483,6 +496,157 @@ app.post("/api/topup", requireAuth, async (req, res) => {
       success: false,
       message: "Không thể tạo yêu cầu nạp tiền"
     });
+  }
+});
+// ===============================
+// ADMIN - XEM YÊU CẦU NẠP TIỀN
+// ===============================
+app.get("/api/admin/topups", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        t.id,
+        t.user_id,
+        u.username,
+        u.email,
+        t.amount,
+        t.note,
+        t.status,
+        t.created_at
+      FROM transactions t
+      JOIN users u ON u.id = t.user_id
+      WHERE t.type = 'topup'
+      ORDER BY t.created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      transactions: result.rows
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể lấy danh sách nạp tiền"
+    });
+  }
+});
+// ===============================
+// ADMIN - DUYỆT NẠP TIỀN
+// ===============================
+app.post("/api/admin/topups/:id/approve", requireAuth, requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const transactionId = Number(req.params.id);
+
+    if (!Number.isInteger(transactionId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID giao dịch không hợp lệ"
+      });
+    }
+
+    await client.query("BEGIN");
+
+    // Khóa giao dịch để tránh duyệt 2 lần
+    const transactionResult = await client.query(
+      `SELECT *
+       FROM transactions
+       WHERE id = $1
+       FOR UPDATE`,
+      [transactionId]
+    );
+
+    if (transactionResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy giao dịch"
+      });
+    }
+
+    const transaction = transactionResult.rows[0];
+
+    if (transaction.type !== "topup") {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        success: false,
+        message: "Giao dịch này không phải nạp tiền"
+      });
+    }
+
+    if (transaction.status !== "Chờ xử lý") {
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        success: false,
+        message: "Giao dịch này đã được xử lý"
+      });
+    }
+
+    // Khóa tài khoản và lấy số dư hiện tại
+    const userResult = await client.query(
+      `SELECT balance
+       FROM users
+       WHERE id = $1
+       FOR UPDATE`,
+      [transaction.user_id]
+    );
+
+    if (userResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tài khoản"
+      });
+    }
+
+    const currentBalance = Number(userResult.rows[0].balance);
+    const topupAmount = Number(transaction.amount);
+    const newBalance = currentBalance + topupAmount;
+
+    // Cộng tiền
+    await client.query(
+      `UPDATE users
+       SET balance = $1
+       WHERE id = $2`,
+      [newBalance, transaction.user_id]
+    );
+
+    // Đổi trạng thái giao dịch
+    await client.query(
+      `UPDATE transactions
+       SET status = 'Đã hoàn tất'
+       WHERE id = $1`,
+      [transactionId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Duyệt nạp tiền thành công",
+      balance: newBalance
+    });
+
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể duyệt nạp tiền"
+    });
+
+  } finally {
+    client.release();
   }
 });
 
