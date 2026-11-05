@@ -530,6 +530,104 @@ function formatMoney(number) {
 }
 
 </script>
+  <!-- ========================= -->
+<!-- QUẢN LÝ TÀI KHOẢN -->
+<!-- ========================= -->
+
+<div style="margin-top:40px;">
+  <h2>👥 Quản lý tài khoản</h2>
+
+  <button onclick="loadAdminUsers()"
+          style="margin:10px 0;padding:8px 14px;cursor:pointer;">
+    🔄 Làm mới
+  </button>
+
+  <div style="overflow-x:auto;">
+    <table border="1"
+           cellpadding="10"
+           cellspacing="0"
+           style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tài khoản</th>
+          <th>Email</th>
+          <th>Số dư</th>
+          <th>Quyền</th>
+          <th>Ngày tạo</th>
+        </tr>
+      </thead>
+
+      <tbody id="adminUsersTableBody">
+        <tr>
+          <td colspan="6">Đang tải...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function loadAdminUsers() {
+  const tbody = document.getElementById("adminUsersTableBody");
+
+  try {
+    const res = await fetch(
+      "https://gia-huy.onrender.com/api/admin/users",
+      {
+        method: "GET",
+        credentials: "include"
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6">${data.message || "Không thể tải tài khoản"}</td>
+        </tr>
+      `;
+      return;
+    }
+
+    if (!data.users || data.users.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6">Chưa có tài khoản</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = data.users.map(user => `
+      <tr>
+        <td>${user.id}</td>
+        <td>${user.username}</td>
+        <td>${user.email || ""}</td>
+        <td>${Number(user.balance || 0).toLocaleString("vi-VN")}đ</td>
+        <td>${user.role}</td>
+        <td>
+          ${user.created_at
+            ? new Date(user.created_at).toLocaleString("vi-VN")
+            : ""}
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (error) {
+    console.error(error);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          ❌ Không thể kết nối backend
+        </td>
+      </tr>
+    `;
+  }
+}
+</script>
 
 </body>
 </html>
