@@ -989,7 +989,7 @@ async logout() {
                     this.showProductModal = true;
                 },
 
-                purchaseProduct() {
+                async purchaseProduct() {
     const id = Number(this.selectedProduct?.id);
 
     // Hai sản phẩm Gemini phải nhập Gmail trước
@@ -1000,45 +1000,79 @@ async logout() {
         return;
     }
 
-    const price = this.selectedProduct.price;
+    const price = Number(this.selectedProduct.price);
 
-    if (this.user.balance < price) {
-        this.showNotification('Số dư ví không đủ, vui lòng nạp thêm tiền!');
+    if (!this.isLoggedIn) {
         this.showProductModal = false;
-        this.showTopUpModal = true;
+        this.authMode = 'login';
+        this.authError = '';
+        this.showAuthModal = true;
         return;
     }
 
-    this.user.balance -= price;
+    if (this.user.balance < price) {
+        this.showProductModal = false;
+        this.showTopUpModal = true;
+        this.showNotification('Số dư ví không đủ, vui lòng nạp thêm tiền!');
+        return;
+    }
 
-    const link = id === 3
-        ? 'https://raw.githubusercontent.com/angl1206205-cmyk/BY_ThanhAnhD18TDHHTD2/980556fb76a1f4f1abbbb341d0b3e5acbe1ea9d7/TIKTOK%40tolaanne_'
-        : id === 4
-        ? 'https://raw.githubusercontent.com/Gaucuto/loz/refs/heads/main/test'
-        : '';
+    this.authLoading = true;
 
-    this.user.orders.unshift({
-        id: 'ORD-' + Math.floor(Math.random() * 9000 + 1000),
-        productName: this.selectedProduct.name,
-        price: price,
-        date: new Date().toISOString().split('T')[0],
-        status: 'Đã hoàn thành',
-        deliveryLink: link,
-        upgradeEmail: ''
-    });
+    try {
+        const link = id === 3
+            ? 'https://raw.githubusercontent.com/angl1206205-cmyk/BY_ThanhAnhD18TDHHTD2/980556fb76a1f4f1abbbb341d0b3e5acbe1ea9d7/TIKTOK%40tolaanne_'
+            : id === 4
+            ? 'https://raw.githubusercontent.com/Gaucuto/loz/refs/heads/main/test'
+            : '';
 
-    this.showProductModal = false;
+        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                productId: id,
+                productName: this.selectedProduct.name,
+                amount: price,
+                upgradeEmail: null,
+                deliveryLink: link || null
+            })
+        });
 
-    if (link) {
-        this.deliveryLink = link;
-        this.showDeliveryModal = true;
-    } else {
-        this.showNotification('Mua hàng thành công!');
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            this.showNotification(data.message || 'Mua hàng thất bại!');
+            return;
+        }
+
+        // Lấy số dư thật từ backend
+        this.user.balance = Number(data.balance || 0);
+
+        // Tải lại lịch sử đơn hàng từ database
+        await this.loadOrders();
+
+        this.showProductModal = false;
+
+        if (link) {
+            this.deliveryLink = link;
+            this.showDeliveryModal = true;
+        } else {
+            this.showNotification('Mua hàng thành công!');
+        }
+
+    } catch (error) {
+        console.error('Lỗi mua hàng:', error);
+        this.showNotification('Không thể kết nối máy chủ!');
+    } finally {
+        this.authLoading = false;
     }
 },
 
 // XÁC NHẬN MUA GEMINI
-confirmGeminiPurchase() {
+async confirmGeminiPurchase() {
     const email = String(this.geminiUpgradeEmail || '').trim().toLowerCase();
 
     if (!/^[^\s@]+@gmail\.com$/.test(email)) {
@@ -1049,8 +1083,16 @@ confirmGeminiPurchase() {
     const id = Number(this.selectedProduct?.id);
 
     const price = id === 2
-        ? this.selectedPlan.price
-        : this.selectedProduct.price;
+        ? Number(this.selectedPlan.price)
+        : Number(this.selectedProduct.price);
+
+    if (!this.isLoggedIn) {
+        this.showGeminiEmailModal = false;
+        this.authMode = 'login';
+        this.authError = '';
+        this.showAuthModal = true;
+        return;
+    }
 
     if (this.user.balance < price) {
         this.showGeminiEmailModal = false;
@@ -1059,27 +1101,51 @@ confirmGeminiPurchase() {
         return;
     }
 
-    this.user.balance -= price;
+    this.authLoading = true;
 
-    this.user.orders.unshift({
-        id: 'ORD-' + Math.floor(Math.random() * 9000 + 1000),
+    try {
+        const productName = this.selectedProduct.name +
+            (id === 2 ? ' (' + this.selectedPlan.duration + ')' : '');
 
-        productName: this.selectedProduct.name +
-            (id === 2 ? ' (' + this.selectedPlan.duration + ')' : ''),
+        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                productId: id,
+                productName: productName,
+                amount: price,
+                upgradeEmail: email,
+                deliveryLink: null
+            })
+        });
 
-        price: price,
-        date: new Date().toISOString().split('T')[0],
+        const data = await res.json();
 
-        status: 'Đã tiếp nhận Gmail',
+        if (!res.ok || !data.success) {
+            this.showNotification(data.message || 'Mua hàng thất bại!');
+            return;
+        }
 
-        upgradeEmail: email,
-        deliveryLink: ''
-    });
+        // Cập nhật số dư thật
+        this.user.balance = Number(data.balance || 0);
 
-    this.geminiUpgradeEmail = '';
-    this.showGeminiEmailModal = false;
+        // Tải lại đơn hàng từ Neon
+        await this.loadOrders();
 
-    this.showNotification('Mua hàng thành công! Gmail đã được lưu.');
+        this.geminiUpgradeEmail = '';
+        this.showGeminiEmailModal = false;
+
+        this.showNotification('Mua hàng thành công! Gmail đã được lưu.');
+
+    } catch (error) {
+        console.error('Lỗi mua Gemini:', error);
+        this.showNotification('Không thể kết nối máy chủ!');
+    } finally {
+        this.authLoading = false;
+    }
 },
 
                 getTopUpQrUrl() {
