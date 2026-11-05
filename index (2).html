@@ -603,7 +603,52 @@ deliveryLink: '',
                     });
                 },
 
-                initData() {},
+                async initData() {
+    try {
+        const res = await fetch('https://gia-huy.onrender.com/api/me', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+
+            if (data.success && data.user) {
+                this.isLoggedIn = true;
+                this.user = {
+                    id: data.user.id,
+                    name: data.user.username,
+                    email: data.user.email || '',
+                    balance: Number(data.user.balance || 0),
+                    orders: []
+                };
+
+                await this.loadOrders();
+            }
+        }
+    } catch (error) {
+        console.error('Không thể kết nối backend:', error);
+    }
+},
+
+async loadOrders() {
+    try {
+        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        if (data.success) {
+            this.user.orders = data.orders || [];
+        }
+    } catch (error) {
+        console.error('Không thể tải đơn hàng:', error);
+    }
+},,
 
                 openProductModal(product) {
                     this.selectedProduct = product;
