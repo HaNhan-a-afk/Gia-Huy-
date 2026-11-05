@@ -388,8 +388,8 @@ app.post("/api/orders", requireAuth, async (req, res) => {
 
     const orderResult = await client.query(
       `INSERT INTO orders
-       (user_id, product_id, product_name, amount, upgrade_email, delivery_link)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       (user_id, product_id, product_name, amount, upgrade_email, delivery_link, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'Đã hoàn thành')
        RETURNING *`,
       [
         req.user.id,
