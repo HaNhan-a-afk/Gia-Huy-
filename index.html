@@ -921,8 +921,10 @@ async refreshBalance() {
 
     try {
         const res = await fetch('https://gia-huy.onrender.com/api/me', {
-            method: 'GET',
-            credentials: 'include'
+    method: 'GET',
+    headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
+    }
         });
 
         if (!res.ok) return;
@@ -950,9 +952,11 @@ startBalanceRefresh() {
 async loadOrders() {
     try {
         const res = await fetch('https://gia-huy.onrender.com/api/orders', {
-            method: 'GET',
-            credentials: 'include'
-        });
+    method: 'GET',
+    headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
+    }
+});
 
         if (!res.ok) return;
 
