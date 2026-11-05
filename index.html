@@ -951,31 +951,48 @@ startBalanceRefresh() {
 
 async loadOrders() {
     try {
-        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
-    method: 'GET',
-    headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
-    }
-});
+        const token = localStorage.getItem('gh_token');
 
-        if (!res.ok) return;
+        if (!token) {
+            console.log('Chưa có token, không thể tải đơn hàng');
+            return;
+        }
+
+        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
 
         const data = await res.json();
 
-        if (data.success) {
-            this.user.orders = (data.orders || []).map(order => ({
-    ...order,
-    upgradeEmail: order.upgrade_email || '',
-    deliveryLink: order.delivery_link || '',
-    productId: order.product_id,
-    productName: order.product_name,
-    price: Number(order.amount || 0),
-    status: order.status,
-    date: order.created_at
-        ? new Date(order.created_at).toLocaleDateString('vi-VN')
-        : ''
-}));
+        console.log('Dữ liệu orders:', data);
+
+        if (!res.ok || !data.success) {
+            console.error('Không tải được đơn hàng:', data.message);
+            return;
         }
+
+        this.user.orders = (data.orders || []).map(order => ({
+            ...order,
+
+            upgradeEmail: order.upgrade_email || '',
+            deliveryLink: order.delivery_link || '',
+
+            productId: order.product_id,
+            productName: order.product_name,
+
+            price: Number(order.amount || 0),
+
+            status: order.status,
+
+            date: order.created_at
+                ? new Date(order.created_at).toLocaleDateString('vi-VN')
+                : ''
+        }));
+
+        console.log('Đã tải', this.user.orders.length, 'đơn hàng');
 
     } catch (error) {
         console.error('Không thể tải đơn hàng:', error);
@@ -1213,14 +1230,25 @@ async logout() {
             return;
         }
 
-        // Cập nhật số dư thật từ server
-        this.user.balance = Number(data.balance);
+        // Cập nhật số dư từ kết quả mua hàng
+this.user.balance = Number(data.balance);
 
-        // Lưu lại user hiện tại nếu cần
-        localStorage.setItem('gh_user', JSON.stringify(this.user));
+// Tải lại đơn hàng từ database
+await this.loadOrders();
 
-        // Tải lại lịch sử đơn hàng từ database
-        await this.loadOrders();
+// Lấy lại số dư thật từ database
+const meRes = await fetch('https://gia-huy.onrender.com/api/me', {
+    method: 'GET',
+    headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
+    }
+});
+
+const meData = await meRes.json();
+
+if (meRes.ok && meData.success) {
+    this.user.balance = Number(meData.user.balance || 0);
+}
 
         this.showProductModal = false;
 
