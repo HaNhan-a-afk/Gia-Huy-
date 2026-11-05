@@ -25,7 +25,7 @@ const pool = new Pool({
 app.use(express.json());
 
 app.use(cors({
-  origin: true,
+  origin: "https://hanhan-a-afk.github.io",
   credentials: true
 }));
 
