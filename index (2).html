@@ -811,7 +811,18 @@ async loadOrders() {
         const data = await res.json();
 
         if (data.success) {
-            this.user.orders = data.orders || [];
+            this.user.orders = (data.orders || []).map(order => ({
+    ...order,
+    upgradeEmail: order.upgrade_email || '',
+    deliveryLink: order.delivery_link || '',
+    productId: order.product_id,
+    productName: order.product_name,
+    price: Number(order.amount || 0),
+    status: order.status,
+    date: order.created_at
+        ? new Date(order.created_at).toLocaleDateString('vi-VN')
+        : ''
+}));
         }
 
     } catch (error) {
