@@ -543,8 +543,8 @@
         </h2>
 
         <p class="text-slate-300 text-sm mb-3">
-            Link Locket Gold 30s của bạn:
-        </p>
+    Link <span x-text="deliveryProductName || 'sản phẩm'"></span> của bạn:
+</p>
 
         <div class="bg-slate-950 text-cyan-400 p-3 rounded-lg break-all text-sm mb-4"
              x-text="deliveryLink">
@@ -1254,11 +1254,12 @@ if (meRes.ok && meData.success) {
         this.showProductModal = false;
 
         if (link) {
-            this.deliveryLink = link;
-            this.showDeliveryModal = true;
-        } else {
-            this.showNotification('Mua hàng thành công!');
-        }
+    this.deliveryLink = link;
+    this.deliveryProductName = this.selectedProduct.name;
+    this.showDeliveryModal = true;
+} else {
+    this.showNotification('Mua hàng thành công!');
+}
 
     } catch (error) {
         console.error('Lỗi mua hàng:', error);
