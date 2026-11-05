@@ -271,7 +271,14 @@ app.post("/api/logout", (req, res) => {
 // ===============================
 app.get("/api/me", async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const token =
+      req.cookies.token ||
+      (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith("Bearer ")
+          ? req.headers.authorization.slice(7)
+          : null
+      );
 
     if (!token) {
       return res.status(401).json({
@@ -302,13 +309,14 @@ app.get("/api/me", async (req, res) => {
     });
 
   } catch (error) {
+    console.error("ME error:", error);
+
     res.status(401).json({
       success: false,
       message: "Phiên đăng nhập không hợp lệ"
     });
   }
 });
-
 
 // ===============================
 // MIDDLEWARE KIỂM TRA ĐĂNG NHẬP
