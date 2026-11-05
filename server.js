@@ -655,6 +655,37 @@ app.post("/api/admin/topups/:id/approve", requireAuth, requireAdmin, async (req,
     client.release();
   }
 });
+// ===============================
+// ADMIN - DANH SÁCH TÀI KHOẢN
+// ===============================
+app.get("/api/admin/users", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        username,
+        email,
+        balance,
+        role,
+        created_at
+      FROM users
+      ORDER BY id DESC
+    `);
+
+    res.json({
+      success: true,
+      users: result.rows
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy danh sách tài khoản:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể lấy danh sách tài khoản"
+    });
+  }
+});
 
 
 // ===============================
