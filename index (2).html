@@ -1181,13 +1181,56 @@ async confirmGeminiPurchase() {
                     this.topUpStep = 2;
                 },
 
-                confirmTopUp() {
-                    // Không tự cộng số dư chỉ vì người dùng bấm nút.
-                    // Cần backend xác minh giao dịch ngân hàng thành công trước khi cộng ví.
-                    this.showNotification('Đã ghi nhận yêu cầu. Số dư sẽ được cập nhật sau khi hệ thống xác minh thanh toán.');
-                    this.showTopUpModal = false;
-                    this.topUpStep = 1;
-                },
+                async confirmTopUp() {
+    if (!this.isLoggedIn) {
+        this.showTopUpModal = false;
+        this.authMode = 'login';
+        this.authError = '';
+        this.showAuthModal = true;
+        return;
+    }
+
+    const amount = Number(this.topUpAmount);
+
+    if (!amount || amount < 10000) {
+        this.showNotification('Số tiền nạp không hợp lệ!');
+        return;
+    }
+
+    try {
+        const res = await fetch('https://gia-huy.onrender.com/api/topup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                amount: amount,
+                note: 'Nạp tiền Gia Huy Shop - ' + this.user.email
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            this.showNotification(data.message || 'Không thể tạo yêu cầu nạp tiền!');
+            return;
+        }
+
+        this.showNotification(
+            'Đã gửi yêu cầu nạp ' +
+            amount.toLocaleString('vi-VN') +
+            'đ. Vui lòng chờ admin xác nhận.'
+        );
+
+        this.showTopUpModal = false;
+        this.topUpStep = 1;
+
+    } catch (error) {
+        console.error('Lỗi tạo yêu cầu nạp:', error);
+        this.showNotification('Không thể kết nối máy chủ!');
+    }
+},
                 async copyDeliveryLink() {
     try {
         await navigator.clipboard.writeText(this.deliveryLink);
