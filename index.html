@@ -1079,6 +1079,7 @@ async login() {
             this.authError = data.message || 'Tên tài khoản hoặc mật khẩu không đúng';
             return;
         }
+        localStorage.setItem("gh_token", data.token);
 
         this.isLoggedIn = true;
 
@@ -1109,6 +1110,7 @@ async login() {
 },
 
 async logout() {
+    localStorage.removeItem("gh_token");
     try {
         await fetch('https://gia-huy.onrender.com/api/logout', {
             method: 'POST',
@@ -1185,12 +1187,12 @@ async logout() {
             ? 'https://raw.githubusercontent.com/Gaucuto/loz/refs/heads/main/test'
             : '';
 
-        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
+        const res = await fetch('https://gia-huy.onrender.com/api/topup', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('gh_token')
+    },
             body: JSON.stringify({
                 productId: id,
                 productName: this.selectedProduct.name,
