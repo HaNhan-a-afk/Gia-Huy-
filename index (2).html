@@ -790,6 +790,7 @@
             return {
     isLoggedIn: false,
     activeTab: 'account',
+    balanceRefreshTimer: null,
     showAuthModal: false,
 authMode: 'login',
 authUsername: '',
@@ -902,6 +903,9 @@ deliveryLink: '',
             };
 
             await this.loadOrders();
+
+            // Làm mới số dư định kỳ
+            this.startBalanceRefresh();
         } else {
             this.isLoggedIn = false;
         }
@@ -910,6 +914,37 @@ deliveryLink: '',
         console.error('Không thể kết nối backend:', error);
         this.isLoggedIn = false;
     }
+},
+
+async refreshBalance() {
+    if (!this.isLoggedIn) return;
+
+    try {
+        const res = await fetch('https://gia-huy.onrender.com/api/me', {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        if (data.success && data.user) {
+            this.user.balance = Number(data.user.balance || 0);
+        }
+    } catch (error) {
+        console.error('Không thể làm mới số dư:', error);
+    }
+},
+
+startBalanceRefresh() {
+    if (this.balanceRefreshTimer) {
+        clearInterval(this.balanceRefreshTimer);
+    }
+
+    this.balanceRefreshTimer = setInterval(() => {
+        this.refreshBalance();
+    }, 10000);
 },
 
 async loadOrders() {
