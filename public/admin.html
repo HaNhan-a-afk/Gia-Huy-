@@ -256,6 +256,8 @@ async function adminLogin() {
 }
 
 window.adminLoggedIn = true;
+    loadAdminUsers();
+loadAdminOrders();
     document.getElementById("adminUsersSection").style.display = "block";
 
 
@@ -572,6 +574,38 @@ function formatMoney(number) {
     </table>
   </div>
 </div>
+  <!-- =============================== -->
+<!-- ADMIN - LỊCH SỬ MUA HÀNG -->
+<!-- =============================== -->
+
+<div style="margin-top:30px;">
+  <h2 style="font-size:20px;font-weight:bold;margin-bottom:15px;">
+    🛒 Lịch sử khách mua hàng
+  </h2>
+
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tài khoản</th>
+          <th>Email tài khoản</th>
+          <th>Sản phẩm</th>
+          <th>Số tiền</th>
+          <th>Gmail nâng cấp</th>
+          <th>Thời gian</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+
+      <tbody id="adminOrdersTableBody">
+        <tr>
+          <td colspan="8">Đang tải...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <script>
   window.adminLoggedIn = false;
@@ -635,6 +669,98 @@ async function loadAdminUsers() {
     tbody.innerHTML = `
       <tr>
         <td colspan="6">
+          ❌ Không thể kết nối backend
+        </td>
+      </tr>
+    `;
+  }
+}
+  async function loadAdminOrders() {
+  const tbody = document.getElementById("adminOrdersTableBody");
+
+  try {
+    const res = await fetch(
+      "https://gia-huy.onrender.com/api/admin/orders",
+      {
+        method: "GET",
+        credentials: "include"
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            ${data.message || "Không thể tải lịch sử mua hàng"}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    if (!data.orders || data.orders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            Chưa có khách mua hàng
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = data.orders.map(order => `
+      <tr>
+        <td>${order.id}</td>
+
+        <td>
+          ${order.username || ""}
+        </td>
+
+        <td>
+          ${order.email || ""}
+        </td>
+
+        <td>
+          ${order.product_name || ""}
+        </td>
+
+        <td>
+          ${Number(order.amount || 0).toLocaleString("vi-VN")}đ
+        </td>
+
+        <td>
+          ${
+            order.upgrade_email
+              ? `<strong style="color:#00e5ff;">
+                   ${order.upgrade_email}
+                 </strong>`
+              : `<span style="color:#888;">Không có</span>`
+          }
+        </td>
+
+        <td>
+          ${
+            order.created_at
+              ? new Date(order.created_at).toLocaleString("vi-VN")
+              : ""
+          }
+        </td>
+
+        <td>
+          ${order.status || ""}
+        </td>
+      </tr>
+    `).join("");
+
+  } catch (error) {
+    console.error("Lỗi tải lịch sử mua hàng:", error);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8">
           ❌ Không thể kết nối backend
         </td>
       </tr>
