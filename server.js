@@ -756,6 +756,43 @@ app.post("/api/admin/users/:id/balance", requireAuth, requireAdmin, async (req, 
     });
   }
 });
+// ===============================
+// ADMIN - LỊCH SỬ KHÁCH MUA HÀNG
+// ===============================
+app.get("/api/admin/orders", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        o.id,
+        o.user_id,
+        u.username,
+        u.email,
+        o.product_id,
+        o.product_name,
+        o.amount,
+        o.upgrade_email,
+        o.delivery_link,
+        o.status,
+        o.created_at
+      FROM orders o
+      JOIN users u ON u.id = o.user_id
+      ORDER BY o.created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      orders: result.rows
+    });
+
+  } catch (error) {
+    console.error("Lỗi lấy lịch sử mua hàng:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể lấy lịch sử mua hàng"
+    });
+  }
+});
 
 
 // ===============================
