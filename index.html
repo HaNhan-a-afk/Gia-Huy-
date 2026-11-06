@@ -1269,7 +1269,107 @@ if (meRes.ok && meData.success) {
         this.authLoading = false;
     }
 },
+                async confirmGeminiPurchase() {
+    const email = String(this.geminiUpgradeEmail || '').trim().toLowerCase();
 
+    if (!/^[^\s@]+@gmail\.com$/.test(email)) {
+        this.showNotification('Vui lòng nhập Gmail hợp lệ!');
+        return;
+    }
+
+    const id = Number(this.selectedProduct?.id);
+
+    const price = id === 2
+        ? Number(this.selectedPlan?.price || 0)
+        : Number(this.selectedProduct?.price || 0);
+
+    if (!price || price <= 0) {
+        this.showNotification('Không xác định được giá sản phẩm!');
+        return;
+    }
+
+    const token = localStorage.getItem('gh_token');
+
+    // Kiểm tra đăng nhập
+    if (!this.isLoggedIn && !token) {
+        this.showGeminiEmailModal = false;
+        this.authMode = 'login';
+        this.authError = '';
+        this.showAuthModal = true;
+        return;
+    }
+
+    // Kiểm tra số dư
+    if (Number(this.user.balance) < price) {
+        this.showGeminiEmailModal = false;
+        this.showTopUpModal = true;
+        this.showNotification('Số dư ví không đủ!');
+        return;
+    }
+
+    this.authLoading = true;
+
+    try {
+        const productName =
+            this.selectedProduct.name +
+            (
+                id === 2 && this.selectedPlan?.duration
+                    ? ' (' + this.selectedPlan.duration + ')'
+                    : ''
+            );
+
+        const res = await fetch('https://gia-huy.onrender.com/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                productId: id,
+                productName: productName,
+                amount: price,
+                upgradeEmail: email,
+                deliveryLink: null
+            })
+        });
+
+        const data = await res.json();
+
+        console.log('KẾT QUẢ MUA GEMINI:', data);
+
+        if (!res.ok || !data.success) {
+            this.showNotification(
+                data.message || 'Mua hàng thất bại!'
+            );
+            return;
+        }
+
+        // Cập nhật số dư mới
+        this.user.balance = Number(data.balance || 0);
+
+        // Tải lại lịch sử đơn hàng
+        await this.loadOrders();
+
+        // Xóa Gmail
+        this.geminiUpgradeEmail = '';
+
+        // Đóng cửa sổ nhập Gmail
+        this.showGeminiEmailModal = false;
+
+        // Thông báo thành công
+        this.showNotification(
+            'Mua hàng thành công! Gmail đã được lưu.'
+        );
+
+    } catch (error) {
+        console.error('Lỗi mua Gemini:', error);
+        this.showNotification(
+            'Không thể kết nối máy chủ!'
+        );
+    } finally {
+        this.authLoading = false;
+    }
+},
                 getTopUpQrUrl() {
                     // VietQR: Agribank (BIN 970405), tự điền số tiền và nội dung chuyển khoản.
                     const bankBin = '970405';
