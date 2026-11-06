@@ -845,6 +845,47 @@ async function loadAdminUsers() {
     alert("❌ Không thể kết nối backend");
   }
 }
+  async function processAdminOrder(orderId) {
+
+  if (!window.adminLoggedIn) {
+    alert("❌ Bạn phải đăng nhập tài khoản admin.");
+    return;
+  }
+
+  const ok = confirm(
+    "Bạn có chắc muốn đánh dấu đơn hàng #" + orderId + " là Đã xử lý?"
+  );
+
+  if (!ok) return;
+
+  try {
+
+    const res = await fetch(
+      `https://gia-huy.onrender.com/api/admin/orders/${orderId}/process`,
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("❌ " + (data.message || "Không thể cập nhật đơn hàng"));
+      return;
+    }
+
+    alert("✅ Đã xử lý đơn hàng #" + orderId);
+
+    loadAdminOrders();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("❌ Không thể kết nối backend");
+  }
+}
 </script>
 
 </body>
