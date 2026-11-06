@@ -426,7 +426,7 @@ app.post("/api/orders", requireAuth, async (req, res) => {
     const orderResult = await client.query(
       `INSERT INTO orders
        (user_id, product_id, product_name, amount, upgrade_email, delivery_link, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'Đã hoàn thành')
+       VALUES ($1, $2, $3, $4, $5, $6, 'Đang xử lý')
        RETURNING *`,
       [
         req.user.id,
@@ -790,6 +790,50 @@ app.get("/api/admin/orders", requireAuth, requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Không thể lấy lịch sử mua hàng"
+    });
+  }
+});
+// ===============================
+// ADMIN - ĐÁNH DẤU ĐƠN ĐÃ XỬ LÝ
+// ===============================
+app.post("/api/admin/orders/:id/process", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const orderId = Number(req.params.id);
+
+    if (!Number.isInteger(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn hàng không hợp lệ"
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE orders
+       SET status = 'Đã xử lý'
+       WHERE id = $1
+       RETURNING *`,
+      [orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Đã đánh dấu đơn hàng là đã xử lý",
+      order: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error("Lỗi cập nhật trạng thái đơn hàng:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Không thể cập nhật trạng thái đơn hàng"
     });
   }
 });
