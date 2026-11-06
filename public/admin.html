@@ -750,8 +750,29 @@ async function loadAdminUsers() {
         </td>
 
         <td>
-          ${order.status || ""}
-        </td>
+  ${
+    order.status === "Đang xử lý"
+      ? `
+        <button
+          onclick="processAdminOrder(${order.id})"
+          style="
+            padding:6px 10px;
+            background:#22c55e;
+            color:white;
+            border:0;
+            border-radius:6px;
+            cursor:pointer;
+          ">
+          ✅ Đã xử lý
+        </button>
+      `
+      : `
+        <span style="color:#22c55e;font-weight:bold;">
+          ${order.status || "Không xác định"}
+        </span>
+      `
+  }
+</td>
       </tr>
     `).join("");
 
