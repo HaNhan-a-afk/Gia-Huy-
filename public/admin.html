@@ -582,6 +582,23 @@ function formatMoney(number) {
   <h2 style="font-size:20px;font-weight:bold;margin-bottom:15px;">
     🛒 Lịch sử khách mua hàng
   </h2>
+  <input
+  type="text"
+  id="adminOrderSearch"
+  placeholder="🔍 Tìm tên khách mua hàng..."
+  oninput="filterAdminOrders()"
+  style="
+    width:100%;
+    max-width:400px;
+    padding:10px 12px;
+    margin-bottom:15px;
+    border:1px solid #374151;
+    border-radius:8px;
+    background:#111827;
+    color:white;
+    outline:none;
+  "
+>
 
   <div style="overflow-x:auto;">
     <table style="width:100%;border-collapse:collapse;">
@@ -711,7 +728,9 @@ async function loadAdminUsers() {
       return;
     }
 
-    tbody.innerHTML = data.orders.map(order => `
+    window.adminOrdersData = data.orders || [];
+
+tbody.innerHTML = window.adminOrdersData.map(order => `
       <tr>
         <td>${order.id}</td>
 
@@ -926,6 +945,109 @@ async function loadAdminUsers() {
 
     alert("❌ Không thể kết nối backend");
   }
+}
+  function filterAdminOrders() {
+
+  const input = document.getElementById("adminOrderSearch");
+
+  if (!input) return;
+
+  const keyword = input.value.trim().toLowerCase();
+
+  const tbody = document.getElementById("adminOrdersTableBody");
+
+  if (!tbody) return;
+
+  const orders = window.adminOrdersData || [];
+
+  const filteredOrders = orders.filter(order => {
+    const username = String(order.username || "").toLowerCase();
+    const email = String(order.email || "").toLowerCase();
+
+    return (
+      username.includes(keyword) ||
+      email.includes(keyword)
+    );
+  });
+
+  if (filteredOrders.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:15px;">
+          🔍 Không tìm thấy khách hàng
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  tbody.innerHTML = filteredOrders.map(order => `
+    <tr>
+      <td>${order.id}</td>
+
+      <td>
+        ${order.username || ""}
+      </td>
+
+      <td>
+        ${order.email || ""}
+      </td>
+
+      <td>
+        ${order.product_name || ""}
+      </td>
+
+      <td>
+        ${Number(order.amount || 0).toLocaleString("vi-VN")}đ
+      </td>
+
+      <td>
+        ${
+          order.upgrade_email
+            ? `<strong style="color:#00e5ff;">
+                 ${order.upgrade_email}
+               </strong>`
+            : `<span style="color:#888;">Không có</span>`
+        }
+      </td>
+
+      <td>
+        ${
+          order.created_at
+            ? new Date(order.created_at).toLocaleString("vi-VN")
+            : ""
+        }
+      </td>
+
+      <td>
+        ${
+          order.status === "Đang xử lý"
+            ? `
+              <button
+                onclick="processAdminOrder(${order.id})"
+                style="
+                  padding:6px 10px;
+                  background:#22c55e;
+                  color:white;
+                  border:0;
+                  border-radius:6px;
+                  cursor:pointer;
+                ">
+                ✅ Đã xử lý
+              </button>
+            `
+            : `
+              <span style="color:#22c55e;font-weight:bold;">
+                ${order.status || "Không xác định"}
+              </span>
+            `
+        }
+      </td>
+
+    </tr>
+  `).join("");
 }
 </script>
 
